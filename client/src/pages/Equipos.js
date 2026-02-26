@@ -46,10 +46,6 @@ const Equipos = () => {
     estado: 'Activo'
   });
 
-  useEffect(() => {
-    fetchData();
-  }, [destinoId, filtros, fetchData]);
-
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -60,25 +56,23 @@ const Equipos = () => {
 
       // Fetch equipos
       const params = new URLSearchParams();
-      if (filtros.tipo) params.append('tipo', filtros.tipo);
+      if (destinoId) params.append('destino_id', destinoId);
       if (filtros.estado) params.append('estado', filtros.estado);
-      if (filtros.destino) params.append('destino', filtros.destino);
-      if (searchTerm) params.append('search', searchTerm);
+      if (filtros.tipo) params.append('tipo_equipo', filtros.tipo);
+      if (filtros.busqueda) params.append('busqueda', filtros.busqueda);
 
       const equiposRes = await api.get(`/equipos?${params.toString()}`);
-      setEquipos(equiposRes.data.equipos);
-
-      // Get destino actual
-      if (destinoId) {
-        const destino = destinosRes.data.find(d => d.id === parseInt(destinoId));
-        setDestinoActual(destino);
-      }
+      setEquipos(equiposRes.data);
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error fetching equipos:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, [destinoId, filtros]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

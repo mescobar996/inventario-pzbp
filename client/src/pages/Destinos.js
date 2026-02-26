@@ -9,6 +9,7 @@ const Destinos = () => {
   const { usuario } = useAuth();
   const [destinos, setDestinos] = useState([]);
   const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line no-unused-vars
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);

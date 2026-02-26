@@ -12,10 +12,6 @@ const Historial = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchHistorial();
-  }, [filtros, fetchHistorial]);
-
   const fetchHistorial = async () => {
     try {
       setLoading(true);
@@ -32,6 +28,10 @@ const Historial = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchHistorial();
+  }, [filtros]);
 
   const getTipoColor = (tipo) => {
     switch (tipo) {

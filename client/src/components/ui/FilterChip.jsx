@@ -58,6 +58,8 @@ export const FilterChipGroup = ({
   allowClear = true,
   className = ''
 }) => {
+  // Find selected option for potential future use
+  // eslint-disable-next-line no-unused-vars
   const _selectedOption = options.find(opt => opt.value === selected);
   
   return (
