@@ -3,10 +3,33 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { parse } = require('csv-parse/sync');
+const XLSX = require('xlsx');
 const { Equipo, Destino, HistorialMovimiento } = require('../config/database');
 const { authenticateToken, requireObservador } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Función helper para parsear cualquier tipo de archivo
+const parseFile = (filePath) => {
+  const ext = path.extname(filePath).toLowerCase();
+  
+  if (ext === '.csv') {
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    return parse(fileContent, {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+      delimiter: [';', ',', '\t']
+    });
+  } else if (ext === '.xlsx' || ext === '.xls') {
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    return XLSX.utils.sheet_to_json(sheet, { defval: '' });
+  }
+  
+  throw new Error('Tipo de archivo no soportado');
+};
 
 // Configuración de multer para almacenar archivos
 const storage = multer.diskStorage({
@@ -210,6 +233,199 @@ ORD-004,INV-2024-004,WPLN4236,SN11111111,PZBP-004,Base Cargadora,PZBP,Base de ca
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename=plantilla_inventario.csv');
   res.send(plantilla);
+});
+
+// POST - Parsear archivo (para preview y auto-mapeo)
+router.post('/parse', authenticateToken, requireObservador, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se ha proporcionado ningún archivo' });
+    }
+
+    const filePath = req.file.path;
+    
+    let records;
+    try {
+      records = parseFile(filePath);
+    } catch (parseError) {
+      console.error('Error parsing file:', parseError);
+      return res.status(400).json({ error: 'Error al parsear el archivo. Verifica que el formato sea correcto.' });
+    }
+
+    // Limpiar archivo
+    fs.unlinkSync(filePath);
+
+    if (!records || records.length === 0) {
+      return res.status(400).json({ error: 'El archivo está vacío o no tiene datos' });
+    }
+
+    const columns = Object.keys(records[0]);
+    
+    // Obtener destinos para auto-mapeo
+    const destinos = await Destino.findAll({ where: { activo: true } });
+    const destinoMap = {};
+    destinos.forEach(d => {
+      destinoMap[d.nombre.toLowerCase()] = d;
+      destinoMap[d.codigo.toLowerCase()] = d;
+    });
+
+    // Auto-mapear columnas
+    const autoMapping = {};
+    const entityFields = {
+      n_orden: ['n_orden', 'n° orden', 'orden', 'no orden'],
+      n_inventario: ['n_inventario', 'n° de inventario', 'inventario', 'numero inventario', 'nro inventario'],
+      catalogo: ['catalogo', 'catálogo', 'cat', 'referencia'],
+      ns_serial: ['ns_serial', 'ns', 'n/s', 'serial', 'numero serie', 'nro serie'],
+      gebipa: ['gebipa', 'ge bipa'],
+      tipo_equipo: ['tipo_equipo', 'tipo', 'tipo equipo', 'clase'],
+      destino: ['destino', 'ubicacion', 'ubicación', 'lugar', 'sitio'],
+      observaciones: ['observaciones', 'obs', 'observacion', 'notas', 'notas observations'],
+      estado: ['estado', 'status', 'situacion', 'situación']
+    };
+
+    columns.forEach(col => {
+      const normalizedCol = col.toLowerCase().replace(/[_\s\.\-]/g, '');
+      
+      for (const [field, variations] of Object.entries(entityFields)) {
+        if (variations.some(v => normalizedCol.includes(v) || v.includes(normalizedCol))) {
+          autoMapping[field] = col;
+          break;
+        }
+      }
+    });
+
+    // Procesar datos y auto-completar destinos
+    const processedData = records.map((row, idx) => {
+      const processed = { _rowIndex: idx + 1 };
+      
+      for (const [field, col] of Object.entries(autoMapping)) {
+        if (col && row[col] !== undefined) {
+          processed[field] = row[col];
+        }
+      }
+      
+      // Auto-resolver destino
+      if (processed.destino) {
+        const destinoKey = processed.destino.toString().toLowerCase().trim();
+        const matchedDestino = destinoMap[destinoKey];
+        if (matchedDestino) {
+          processed.destino_id = matchedDestino.id;
+          processed.destino_nombre = matchedDestino.nombre;
+          processed.destino_color = matchedDestino.color;
+        } else {
+          processed.destino_id = null;
+          processed.destino_nombre = 'No encontrado';
+        }
+      }
+      
+      return processed;
+    });
+
+    res.json({
+      columns,
+      data: processedData.slice(0, 100),
+      autoMapping,
+      destinos: destinos.map(d => ({ id: d.id, nombre: d.nombre, codigo: d.codigo })),
+      totalRows: records.length
+    });
+
+  } catch (error) {
+    console.error('Error en parse:', error);
+    res.status(500).json({ error: 'Error al parsear archivo: ' + error.message });
+  }
+});
+
+// POST - Importar datos con mapeo (ya procesados)
+router.post('/importar/:entidad', authenticateToken, requireObservador, async (req, res) => {
+  try {
+    const { entidad } = req.params;
+    const { data, mapping } = req.body;
+
+    if (!data || !Array.isArray(data)) {
+      return res.status(400).json({ error: 'Datos inválidos' });
+    }
+
+    const resultados = {
+      exitosos: [],
+      errores: [],
+      total: data.length
+    };
+
+    if (entidad === 'equipos') {
+      for (const record of data) {
+        try {
+          // Usar los campos ya procesados (ya tienen destino_id resuelto)
+          const n_inventario = record.n_inventario;
+          const ns_serial = record.ns_serial;
+          
+          if (!n_inventario || !ns_serial) {
+            resultados.errores.push({ row: record, error: 'Faltan campos requeridos: N° Inventario o N/S' });
+            continue;
+          }
+
+          // Usar destino_id ya resuelto (del parseo)
+          const destino_id = record.destino_id || null;
+
+          // Verificar duplicados
+          const existingSerial = await Equipo.findOne({ where: { ns_serial } });
+          if (existingSerial) {
+            resultados.errores.push({ row: record, error: `N/S duplicado: ${ns_serial}` });
+            continue;
+          }
+
+          const existingInventario = await Equipo.findOne({ where: { n_inventario } });
+          if (existingInventario) {
+            resultados.errores.push({ row: record, error: `N° de inventario duplicado: ${n_inventario}` });
+            continue;
+          }
+
+          // Crear equipo
+          const equipo = await Equipo.create({
+            n_orden: record.n_orden || '',
+            n_inventario,
+            catalogo: record.catalogo || '',
+            ns_serial,
+            gebipa: record.gebipa || '',
+            tipo_equipo: record.tipo_equipo || 'Equipo',
+            destino_id,
+            observaciones: record.observaciones || '',
+            estado: record.estado || 'Activo'
+          });
+
+          // Crear historial
+          const destino = destino_id ? await Destino.findByPk(destino_id) : null;
+          await HistorialMovimiento.create({
+            equipo_id: equipo.id,
+            n_inventario: equipo.n_inventario,
+            ns_serial: equipo.ns_serial,
+            destino_origen_id: null,
+            destino_origen_nombre: 'Sin asignar',
+            destino_nuevo_id: destino_id,
+            destino_nuevo_nombre: destino?.nombre || 'Sin asignar',
+            usuario_id: req.usuario.id,
+            usuario_nombre: req.usuario.nombre_completo || req.usuario.username,
+            tipo_movimiento: 'Alta',
+            observaciones: 'Carga masiva'
+          });
+
+          resultados.exitosos.push({ id: equipo.id, n_inventario: equipo.n_inventario });
+
+        } catch (err) {
+          resultados.errores.push({ row: record._rowIndex || '?', error: err.message });
+        }
+      }
+    }
+
+    res.json({
+      message: `Importación completada: ${resultados.exitosos.length} exitosos, ${resultados.errores.length} errores`,
+      importados: resultados.exitosos.length,
+      ...resultados
+    });
+
+  } catch (error) {
+    console.error('Error en importar:', error);
+    res.status(500).json({ error: 'Error al importar datos: ' + error.message });
+  }
 });
 
 module.exports = router;

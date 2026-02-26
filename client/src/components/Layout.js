@@ -9,7 +9,8 @@ import {
   LogOut, 
   Menu, 
   FileText,
-  User
+  User,
+  Upload
 } from 'lucide-react';
 
 const Layout = ({ children }) => {
@@ -24,6 +25,7 @@ const Layout = ({ children }) => {
     { path: '/equipos', icon: Radio, label: 'Equipos' },
     { path: '/historial', icon: History, label: 'Historial' },
     { path: '/reportes', icon: FileText, label: 'Reportes' },
+    { path: '/carga', icon: Upload, label: 'Carga' },
   ];
 
   const handleLogout = async () => {

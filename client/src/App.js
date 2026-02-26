@@ -7,6 +7,7 @@ import Destinos from './pages/Destinos';
 import Equipos from './pages/Equipos';
 import Historial from './pages/Historial';
 import Reportes from './pages/Reportes';
+import Carga from './pages/Carga';
 import Layout from './components/Layout';
 
 function PrivateRoute({ children }) {
@@ -42,6 +43,7 @@ function App() {
                     <Route path="/equipos" element={<Equipos />} />
                     <Route path="/historial" element={<Historial />} />
                     <Route path="/reportes" element={<Reportes />} />
+                    <Route path="/carga" element={<Carga />} />
                   </Routes>
                 </Layout>
               </PrivateRoute>

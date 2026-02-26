@@ -20,7 +20,7 @@ const Equipos = () => {
   const { usuario } = useAuth();
   const [equipos, setEquipos] = useState([]);
   const [destinos, setDestinos] = useState([]);
-  const [destinoActual, setDestinoActual] = useState(null);
+  const [destinoActual] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
@@ -62,7 +62,7 @@ const Equipos = () => {
       if (filtros.busqueda) params.append('busqueda', filtros.busqueda);
 
       const equiposRes = await api.get(`/equipos?${params.toString()}`);
-      setEquipos(equiposRes.data);
+      setEquipos(equiposRes.data.equipos);
     } catch (err) {
       console.error('Error fetching equipos:', err);
     } finally {
@@ -70,6 +70,7 @@ const Equipos = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchData();
   }, [destinoId, filtros]);
