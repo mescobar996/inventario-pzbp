@@ -8,7 +8,7 @@ const Destinos = () => {
   const { usuario } = useAuth();
   const [destinos, setDestinos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [, setError] = useState(null);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
