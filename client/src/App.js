@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Destinos from './pages/Destinos';
 import Equipos from './pages/Equipos';
 import Historial from './pages/Historial';
+import Reportes from './pages/Reportes';
 import Layout from './components/Layout';
 
 function PrivateRoute({ children }) {
@@ -40,6 +41,7 @@ function App() {
                     <Route path="/destinos/:id" element={<Equipos />} />
                     <Route path="/equipos" element={<Equipos />} />
                     <Route path="/historial" element={<Historial />} />
+                    <Route path="/reportes" element={<Reportes />} />
                   </Routes>
                 </Layout>
               </PrivateRoute>

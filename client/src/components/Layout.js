@@ -9,7 +9,7 @@ import {
   LogOut, 
   Menu, 
   X,
-  Settings,
+  FileText,
   User
 } from 'lucide-react';
 
@@ -24,6 +24,7 @@ const Layout = ({ children }) => {
     { path: '/destinos', icon: FolderKanban, label: 'Destinos' },
     { path: '/equipos', icon: Radio, label: 'Equipos' },
     { path: '/historial', icon: History, label: 'Historial' },
+    { path: '/reportes', icon: FileText, label: 'Reportes' },
   ];
 
   const handleLogout = async () => {

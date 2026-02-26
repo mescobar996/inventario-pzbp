@@ -10,6 +10,7 @@ const historialRoutes = require('./routes/historial');
 const dashboardRoutes = require('./routes/dashboard');
 const uploadRoutes = require('./routes/upload');
 const seedRoutes = require('./routes/seed');
+const reportesRoutes = require('./routes/reportes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,6 +33,7 @@ app.use('/api/historial', historialRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/seed', seedRoutes);
+app.use('/api/reportes', reportesRoutes);
 
 // Ruta para servir React en producción
 if (process.env.NODE_ENV === 'production') {
