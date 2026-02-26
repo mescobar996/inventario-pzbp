@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Edit2, Trash2, Search, FolderKanban, ArrowRight, X, Check, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, FolderKanban, ArrowRight, X } from 'lucide-react';
 
 const Destinos = () => {
   const { usuario } = useAuth();
   const [destinos, setDestinos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);

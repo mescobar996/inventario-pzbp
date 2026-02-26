@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Plus, Edit2, Trash2, Search, Upload, X, ArrowLeft, 
-  ArrowRight, AlertCircle, Filter, Grid, List, CheckCircle
+  Plus, Search, Upload, X, 
+  AlertCircle, Grid, List, CheckCircle
 } from 'lucide-react';
 
 // Import new UI components
@@ -12,8 +12,7 @@ import {
   EquipmentCard, 
   EquipmentCardCompact, 
   EquipmentListSkeleton, 
-  FilterChipGroup,
-  FilterChipMulti 
+  FilterChipGroup
 } from '../components/ui';
 
 const Equipos = () => {
@@ -49,7 +48,7 @@ const Equipos = () => {
 
   useEffect(() => {
     fetchData();
-  }, [destinoId, filtros]);
+  }, [destinoId, filtros, fetchData]);
 
   const fetchData = async () => {
     try {

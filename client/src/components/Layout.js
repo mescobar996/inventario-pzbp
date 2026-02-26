@@ -8,7 +8,6 @@ import {
   History, 
   LogOut, 
   Menu, 
-  X,
   FileText,
   User
 } from 'lucide-react';

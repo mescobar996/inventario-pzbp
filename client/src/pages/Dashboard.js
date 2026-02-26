@@ -4,10 +4,10 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
 import api from '../services/api';
-import { Radio, Battery, Zap, RefreshCw, ArrowRight, Activity, Clock, TrendingUp, Package, AlertCircle, CheckCircle, MapPin } from 'lucide-react';
+import { Radio, Battery, Zap, RefreshCw, ArrowRight, Activity, Clock, TrendingUp, Package, AlertCircle, CheckCircle } from 'lucide-react';
 
 // Import new UI components
-import { KPICard, DashboardSkeleton, StatusBadge } from '../components/ui';
+import { KPICard, DashboardSkeleton } from '../components/ui';
 
 // Corporate color palette - Material Design 3
 const COLORS = {

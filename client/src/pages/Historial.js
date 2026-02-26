@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Search, Filter, Calendar, ArrowRight, Activity, Clock, User } from 'lucide-react';
+import { Search, Calendar, ArrowRight, Activity, Clock, User } from 'lucide-react';
 
 const Historial = () => {
   const [historial, setHistorial] = useState([]);
@@ -14,7 +14,7 @@ const Historial = () => {
 
   useEffect(() => {
     fetchHistorial();
-  }, [filtros]);
+  }, [filtros, fetchHistorial]);
 
   const fetchHistorial = async () => {
     try {

@@ -58,7 +58,7 @@ export const FilterChipGroup = ({
   allowClear = true,
   className = ''
 }) => {
-  const selectedOption = options.find(opt => opt.value === selected);
+  const _selectedOption = options.find(opt => opt.value === selected);
   
   return (
     <div className={className}>
