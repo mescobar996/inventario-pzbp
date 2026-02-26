@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Plus, Edit2, Trash2, Search, FolderKanban, ArrowRight, X } from 'lucide-react';
 
 const Destinos = () => {
+  // Component for managing destinos/ubicaciones
   const { usuario } = useAuth();
   const [destinos, setDestinos] = useState([]);
   const [loading, setLoading] = useState(true);
